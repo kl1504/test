@@ -16,18 +16,15 @@ jobs:
   - name: Checkout code
     uses: actions/checkout@v6
   - name: Install test environment
-      uses: actions/setup-node@v6.0.1
-      with:
-        node-version: '20' 
+    uses: actions/setup-node@v6.0.1
+    with:
+      node-version: '20' 
 
-    - name: Validate the HTML syntax
-      run: npx htmlhint "**/*.html"
+  - name: Validate the HTML syntax
+    run: npx htmlhint "**/*.html"
 
-    - name: Validate the JavaScript syntax
-      run: |
-        # Correction : Syntaxe d'analyse native correcte avec find et node
-        find . -name "*.js" -not -path "*/node_modules/*" -exec node --check {} \;
-
+  - name: Validate the JavaScript syntax
+    run: find . -name "*.js" -not -path "*/node_modules/*" -exec node --check {} \;
 
   build:
     runs-on: ubuntu-24.04
@@ -37,7 +34,7 @@ jobs:
     - name: Récupérer le code du projet
       uses: actions/checkout@v6.0.1
 
-    - name: Con- name: Configurer Docker Buildx
+    - name: Configurer Docker Buildx
       uses: docker/setup-buildx-action@v3
 
     - name: Construire l'image Docker
