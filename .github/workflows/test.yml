@@ -43,3 +43,4 @@ jobs:
           file: ./Dockerfile
           push: false
           tags: mon-site-html:latest
+
