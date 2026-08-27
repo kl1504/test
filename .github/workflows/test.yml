@@ -44,3 +44,18 @@ jobs:
           push: false
           tags: mon-site-html:latest
 
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Upload Production Artifacts
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Le point '.' signifie qu'on prend tout le contenu de la racine du projet
+          path: '.' 
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
+
