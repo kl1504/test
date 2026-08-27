@@ -15,9 +15,9 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - name: Install test environment
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: '20'
 
@@ -33,10 +33,10 @@ jobs:
 
     steps:
       - name: Récupérer le code du projet
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Configurer Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Construire l'image Docker
         uses: docker/build-push-action@v6
@@ -47,18 +47,39 @@ jobs:
           tags: mon-site-html:latest
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: build
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Upload Production Artifacts
-        uses: actions/upload-pages-artifact@v3
+      - name: Télécharger l'image Docker archivée
+        uses: actions/download-artifact@v4
         with:
-          # Le point '.' signifie qu'on prend tout le contenu de la racine du projet
-          path: '.' 
+          name: docker-image
+          path: /tmp
 
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
+      # 1. ÉTAPE CLÉ : Récupérer l'IP publique réelle attribuée au runner par GitHub
+      - name: Récupérer l'IP Publique du Runner
+        id: public_ip
+        run: |
+          RUNNER_IP=$(curl -s https://ipify.org)
+          echo "L'adresse IP publique de ce runner est : $RUNNER_IP"
+          echo "ip=$RUNNER_IP" >> $GITHUB_OUTPUT
+
+      - name: Charger l'image Docker
+        run: docker load --input /tmp/mon-site-html.tar
+
+      # 2. On démarre le conteneur en le liant à TOUTES les interfaces (0.0.0.0)
+      - name: Déployer et démarrer le conteneur
+        run: |
+          docker run -d \
+          -p 0.0.0.0:8080:80 \
+          --name conteneur-site \
+          mon-site-html:latest
+
+      # 3. On teste via l'adresse IP publique globale et le port
+      - name: Valider l'accès via l'IP Publique et le Port
+        run: |
+          sleep 3
+          echo "Requête sur l'IP externe du runner..."
+          curl -v http://${{ steps.public_ip.outputs.ip }}:8080
+
 
