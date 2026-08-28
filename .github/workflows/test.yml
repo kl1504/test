@@ -25,35 +25,6 @@ jobs:
       - name: Validate the JavaScript syntax
         run: find . -name "*.js" -not -path "*/node_modules/*" -exec node --check {} \;
 
-  check_security:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Requis par SonarQube
-
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v3
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        with:
-          args: >
-            -Dsonar.qualitygate.wait=true
-
-      - name: Scan du système de fichiers avec Trivy
-        uses: aquasec/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'table'
-          exit-code: '1' # Bloque le pipeline en cas de vulnérabilité
-          ignore-unfixed: true
-          severity: 'CRITICAL,HIGH'
-
-
-
   build:
     runs-on: ubuntu-24.04
     needs: test
@@ -82,6 +53,35 @@ jobs:
         with:
           name: docker-image
           path: /tmp/mon-site-html.tar
+
+  check_security:
+    runs-on: ubuntu-24.04
+    needs:  build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Requis par SonarQube
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v3
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          args: >
+            -Dsonar.qualitygate.wait=true
+
+      - name: Scan du système de fichiers avec Trivy
+        uses: aquasec/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          exit-code: '1' # Bloque le pipeline en cas de vulnérabilité
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
 
   deploy:
     runs-on: self-hosted
