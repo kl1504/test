@@ -44,8 +44,18 @@ jobs:
           context: .
           file: ./Dockerfile
           push: false
+          load: true
           tags: mon-site-html:latest
+      
+      - name: Exporter l'image en fichier tar
+        run: docker save mon-site-html:latest -o /tmp/mon-site-html.tar
 
+      - name: Uploader l'image Docker en artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp/mon-site-html.tar
+          
   deploy:
     runs-on: self-hosted
     needs: build
