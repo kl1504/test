@@ -29,17 +29,15 @@ jobs:
         run: find . -name "*.js" -not -path "*/node_modules/*" -exec node --check {} \;
       
       - name: Analyse SonarQube
-        uses: sonarsource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }} # Mettez votre IP locale (ex: http://192.168.x.x:9000)
-
-      # Vérification de la Quality Gate
-      - name: Vérification Quality Gate SonarQube
-        uses: sonarsource/sonarqube-quality-gate-action@v1
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      - name: Run SonarQube Quality Gate
+        uses: SonarSource/sonarqube-quality-gate-action@cf038b0e0cdecfa9e56c198bbb7d21d751d62c3b # v1.2.0
         timeout-minutes: 5
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}  
+            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   build:
     runs-on: ubuntu-24.04
@@ -123,4 +121,22 @@ jobs:
           sleep 3
           echo "Site accessible sur : http://${{ steps.local_ip.outputs.ip }}:8080"
           curl -v http://${{ steps.local_ip.outputs.ip }}:8080
+
+  owasp_zap_scan:
+    runs-on: self-hosted
+    needs: deploy
+
+    steps:
+      - name: Scan dynamique OWASP ZAP
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: 'http://172.20.20.23:8080'
+          cmd_options: '-a'
+          fail_action: true
+
+      - name: Uploader le rapport ZAP
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-scan-report
+          path: report_html.html
 
