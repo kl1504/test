@@ -85,7 +85,7 @@ jobs:
 
   deploy:
     runs-on: self-hosted
-    needs: build
+    needs: check_security
     steps:
       - name: Télécharger l'image Docker archivée
         uses: actions/download-artifact@v4
