@@ -9,11 +9,14 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-24.04
+    runs-on: self-hosted
 
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+
       - name: Install test environment
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
@@ -24,6 +27,19 @@ jobs:
 
       - name: Validate the JavaScript syntax
         run: find . -name "*.js" -not -path "*/node_modules/*" -exec node --check {} \;
+      
+      - name: Analyse SonarQube
+        uses: sonarsource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }} # Mettez votre IP locale (ex: http://192.168.x.x:9000)
+
+      # Vérification de la Quality Gate
+      - name: Vérification Quality Gate SonarQube
+        uses: sonarsource/sonarqube-quality-gate-action@v1
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}  
 
   build:
     runs-on: ubuntu-24.04
