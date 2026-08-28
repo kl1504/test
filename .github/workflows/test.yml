@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   test:
-    runs-on: self-hosted
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout code
@@ -26,7 +26,7 @@ jobs:
         run: find . -name "*.js" -not -path "*/node_modules/*" -exec node --check {} \;
 
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-24.04
     needs: test
 
     steps:
@@ -62,7 +62,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - name: Scanner le code et les fichiers
-        uses: aquasec/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
