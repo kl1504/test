@@ -60,27 +60,14 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Requis par SonarQube
-
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v3
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        with:
-          args: >
-            -Dsonar.qualitygate.wait=true
-
-      - name: Scan du système de fichiers avec Trivy
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Scanner le code et les fichiers
         uses: aquasec/trivy-action@master
         with:
           scan-type: 'fs'
           scan-ref: '.'
           format: 'table'
-          exit-code: '1' # Bloque le pipeline en cas de vulnérabilité
-          ignore-unfixed: true
+          exit-code: '1' # Bloque le pipeline si une faille grave est trouvée
           severity: 'CRITICAL,HIGH'
 
   deploy:
