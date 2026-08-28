@@ -47,7 +47,7 @@ jobs:
           tags: mon-site-html:latest
 
   deploy:
-    runs-on: ubuntu-24.04
+    runs-on: self-hosted
     needs: build
     steps:
       - name: Télécharger l'image Docker archivée
@@ -56,30 +56,31 @@ jobs:
           name: docker-image
           path: /tmp
 
-      # 1. ÉTAPE CLÉ : Récupérer l'IP publique réelle attribuée au runner par GitHub
-      - name: Récupérer l'IP Publique du Runner
-        id: public_ip
+      - name: Récupérer l'IP locale du runner
+        id: local_ip
         run: |
-          RUNNER_IP=$(curl -s https://ipify.org)
-          echo "L'adresse IP publique de ce runner est : $RUNNER_IP"
+          RUNNER_IP=$(hostname -I | awk '{print $1}')
+          echo "L'adresse IP locale de ce runner est : $RUNNER_IP"
           echo "ip=$RUNNER_IP" >> $GITHUB_OUTPUT
 
       - name: Charger l'image Docker
         run: docker load --input /tmp/mon-site-html.tar
 
-      # 2. On démarre le conteneur en le liant à TOUTES les interfaces (0.0.0.0)
+      - name: Nettoyer un ancien conteneur éventuel
+        run: |
+          docker stop conteneur-site 2>/dev/null || true
+          docker rm conteneur-site 2>/dev/null || true
+
       - name: Déployer et démarrer le conteneur
         run: |
           docker run -d \
-          -p 0.0.0.0:8080:80 \
-          --name conteneur-site \
-          mon-site-html:latest
+            -p 0.0.0.0:8080:80 \
+            --name conteneur-site \
+            mon-site-html:latest
 
-      # 3. On teste via l'adresse IP publique globale et le port
-      - name: Valider l'accès via l'IP Publique et le Port
+      - name: Valider l'accès via l'IP et le Port
         run: |
           sleep 3
-          echo "Requête sur l'IP externe du runner..."
-          curl -v http://${{ steps.public_ip.outputs.ip }}:8080
-
+          echo "Site accessible sur : http://${{ steps.local_ip.outputs.ip }}:8080"
+          curl -v http://${{ steps.local_ip.outputs.ip }}:8080
 
