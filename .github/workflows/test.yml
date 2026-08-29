@@ -33,6 +33,7 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        
       - name: Run SonarQube Quality Gate
         uses: SonarSource/sonarqube-quality-gate-action@cf038b0e0cdecfa9e56c198bbb7d21d751d62c3b # v1.2.0
         timeout-minutes: 5
@@ -133,6 +134,7 @@ jobs:
         with:
           target: 'http://172.20.20.23:8080'
           fail_action: true
+          cmd_options: '-m 3'
 
       - name: Uploader le rapport ZAP
         uses: actions/upload-artifact@v4
