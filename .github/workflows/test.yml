@@ -58,10 +58,10 @@ jobs:
           file: ./Dockerfile
           push: false
           load: true
-          tags: mon-site-html:latest
+          tags: image_website
       
       - name: Exporter l'image en fichier tar
-        run: docker save mon-site-html:latest -o /tmp/mon-site-html.tar
+        run: docker save image_website:latest -o /tmp/image_website.tar
 
       - name: Uploader l'image Docker en artifact
         uses: actions/upload-artifact@v4
