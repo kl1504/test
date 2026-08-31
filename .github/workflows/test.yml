@@ -126,7 +126,7 @@ jobs:
   owasp_zap_scan:
     runs-on: self-hosted
     needs: deploy
-    timeout-minutes: 15
+    timeout-minutes: 14
 
     steps:
       - name: Scan dynamique OWASP ZAP
