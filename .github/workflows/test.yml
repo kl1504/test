@@ -1,3 +1,5 @@
+name: CI-CD Pipeline
+
 on:
   push:
     branches: [main]
@@ -58,7 +60,7 @@ jobs:
           file: ./Dockerfile
           push: false
           load: true
-          tags: image_website
+          tags: image_website:latest
       
       - name: Exporter l'image en fichier tar
         run: docker save image_website:latest -o /tmp/image_website.tar
@@ -67,11 +69,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: docker-image
-          path: /tmp/mon-site-html.tar
+          path: /tmp/image_website.tar
 
   check_security:
     runs-on: ubuntu-24.04
-    needs:  build
+    needs: build
 
     steps:
       - name: Checkout code
@@ -82,7 +84,7 @@ jobs:
           scan-type: 'fs'
           scan-ref: '.'
           format: 'table'
-          exit-code: '1' # Bloque le pipeline si une faille grave est trouvée
+          exit-code: '1'
           severity: 'CRITICAL,HIGH'
 
   deploy:
@@ -103,7 +105,7 @@ jobs:
           echo "ip=$RUNNER_IP" >> $GITHUB_OUTPUT
 
       - name: Charger l'image Docker
-        run: docker load --input /tmp/mon-site-html.tar
+        run: docker load --input /tmp/image_website.tar
 
       - name: Nettoyer un ancien conteneur éventuel
         run: |
@@ -115,7 +117,7 @@ jobs:
           docker run -d \
             -p 0.0.0.0:8080:80 \
             --name conteneur-site \
-            mon-site-html:latest
+            image_website:latest
 
       - name: Valider l'accès via l'IP et le Port
         run: |
@@ -141,4 +143,3 @@ jobs:
         with:
           name: zap-scan-report
           path: report_html.html
-
